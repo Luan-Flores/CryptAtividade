@@ -1,26 +1,35 @@
 <?php
+require_once "../model/usuario.php";
+require_once "../config/database.php";
 
-require_once '../config/database.php';
-require_once '../model/Usuario.php';
+class usuarioController{
+    public $usuario;
+    public $conexao;
 
-class usuarioController {
-    public function cadastrar($nome, $dataNsc, $email, $senha, $cep) {
-        $conexao = new Banco();
-        $bd = $conexao->conectar();
+    public function conectarBd() {
+        $this->conexao = (new banco())->conectar();
+        return $this->conexao;
+    }
 
-        $usuario = new Usuario($bd);
-        $usuario->nome = $nome;
-        $usuario->email = $email;
-        $usuario->senha = password_hash($senha, PASSWORD_DEFAULT); // Hash da senha
-        $usuario->dataNsc = $dataNsc;
-        $usuario->cep = $cep;
+    public function cadastrar($nome, $dataNasc, $email, $senha, $endereco) {
+        $usuario = new Usuario($this->conectarBd());
+        $query = $usuario->cadastrar();
 
-        if ($usuario->cadastrar()) {
-            $bd->close();
-            header('Location: ../view/formUsuario.php');
-            exit; 
+        $stmt = $this->conexao->prepare($query);
+        $senhahash = password_hash($senha, PASSWORD_BCRYPT);
+        $stmt->bind_param("sssss", $nome, $dataNasc, $email, $senhahash, $endereco);
+        $stmt->execute();
+
+        if ($stmt->affected_rows > 0) {
+            // Redireciona para login.php após o cadastro com sucesso
+            header("Location: ../index.php"); 
+            exit(); // Certifique-se de chamar exit() para garantir que o código posterior não seja executado
         } else {
-            echo "Erro ao cadastrar usuario";
-        } 
+            // Em caso de falha, redirecionar para uma página de erro ou mensagem
+            echo "erro"; 
+            exit();
+        }
+
+        $this->conexao->close();
     }
 }

@@ -1,7 +1,8 @@
 <?php
+
 class Banco {
     const host = 'localhost';
-    const banco = 'crypt';
+    const banco = 'crepe';
     const usuario = 'root';
     const senha = '';
     public $conexao;
